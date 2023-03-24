@@ -44,7 +44,7 @@ for(i in 1:maxnum_mod) {
 }
 
 #in table find best BSS/TSS
-BICompare_test[BICompare_test$`BIC ratio` <= 0.25, ]
+BICompare_test <- BICompare_test[BICompare_test$`BIC ratio` <= 0.25, ]
 BICompare_test <- BICompare_test[order(BICompare_test$`BSS/TSS`, decreasing=T, na.last=T), ]
 optimum_mod <- BICompare_test[1,1]
 
