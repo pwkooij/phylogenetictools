@@ -3,9 +3,9 @@
 import sys
 import fileinput
 
-all_names=sys.argv[1] #read in text fie with all sequence headers
+all_names=sys.argv[1] #read in text file with all sequence headers
 output=sys.argv[2] #create new output
-fastas=sys.argv[3:] #read in text fie with all sequence headers
+fastas=sys.argv[3:] #read in fasta files in the order you want them to be merged
 
 fullfas=open(output+'.fasta', 'w')
 
