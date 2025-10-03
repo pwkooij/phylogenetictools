@@ -3,55 +3,55 @@
 import sys
 import fileinput
 
-all_names=sys.argv[1] #read in text file with all sequence headers
-output=sys.argv[2] #create new output
-fastas=sys.argv[3:] #read in fasta files in the order you want them to be merged
+def extract_fasta_names(fasta_files):
+    unique_headers = set()
+    
+    for line in fileinput.input(fasta_files):
+        if line.startswith('>'):
+            header = line.strip()
+            unique_headers.add(header)
+    
+    return sorted(unique_headers)
 
-fullfas=open(output+'.fasta', 'w')
+def concatenate_fasta_sequences(fasta_files, output_file, names):
+    fas_dict = {key: '' for key in names}
+    
+    print(f"{fasta_files}")
+    print(f"{len(fasta_files)} fasta files")
+    
+    for fasta in fasta_files:
+        temp_dict = {}
+        header = ''
+        seq = ''
+        
+        with open(fasta) as file:
+            all_lines = file.readlines()
+            seqlength = max(len(line.strip()) for line in all_lines[1:] if line.strip()) if len(all_lines) > 1 else 0
+            emptyseq = '?' * seqlength  # Replace missing sequences with '?'
+            print(f"{fasta} {seqlength} bp in length")
+        
+        for line in fileinput.input(fasta):
+            if line.startswith('>'):
+                header = line.strip()
+            else:
+                seq = line.strip()
+                temp_dict[header] = seq
+        fileinput.close()
+        
+        for name in names:
+            fas_dict[name] += temp_dict.get(name, emptyseq)
+    
+    with open(output_file + '.fasta', 'w') as fullfas:
+        for name, sequence in fas_dict.items():
+            fullfas.write(name + '\n' + sequence + '\n')
 
-print(all_names)
-print(output)
-print(fastas)
-print(len(fastas),"fasta files")
-
-t = len(fastas)
-seqlist=[]
-names=open(all_names).readlines()
-names=[s.rstrip() for s in names]
-
-fas_dict={}
-for key in names:
-	fas_dict[key]=''
-
-for i in range(0,t): #range through each of the files
-	header=''
-	seq=''
-	temp_dict={}
-
-	file=open(fastas[i])
-	all_lines=file.readlines()
-	seqlength=len(all_lines[1])-1
-	print(fastas[i],seqlength,"bp in length")
-	emptyseq='-'*seqlength
-
-	for line in fileinput.input(fastas[i]): #extract fasta headers and sequences
-		if line[0:1]=='>':
-			header=line.rstrip()
-			next
-		else:
-			seq=line.rstrip()
-		temp_dict[header]=seq
-	fileinput.close()
-
-	for name in names: #write sequences to dictionary, i.e. concatenate sequences
-		if name in temp_dict:
-			fas_dict[name]=fas_dict[name]+temp_dict[name]
-		else: #if fasta file doesn't have a sequence of a particular sample, write '-' as long as the sequences
-			fas_dict[name]=fas_dict[name]+emptyseq
-
-for name in fas_dict: #write out concatenated sequences to file
-	fullfas.write(name)
-	fullfas.write('\n')
-	fullfas.write(fas_dict[name])
-	fullfas.write('\n')
-fullfas.close() #closing file
+if __name__ == "__main__":
+    if len(sys.argv) < 3:
+        print("Usage: python3 script.py <output_prefix> <fasta1> <fasta2> ...")
+        sys.exit(1)
+    
+    output_prefix = sys.argv[1]
+    fasta_files = sys.argv[2:]
+    
+    fasta_names = extract_fasta_names(fasta_files)
+    concatenate_fasta_sequences(fasta_files, output_prefix, fasta_names)
